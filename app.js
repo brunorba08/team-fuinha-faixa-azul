@@ -4,12 +4,15 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 function categoryBody(i){
 const c=categories[i];
-return '<div class="techniques">'+c.items.map((item,j)=>'<article class="technique"><button class="thumbnail" data-play="'+i+','+j+'" aria-label="Assistir '+esc(item.name)+'"><img loading="lazy" src="https://i.ytimg.com/vi/'+item.id+'/hqdefault.jpg" alt="Demonstração: '+esc(item.name)+'"><span class="play"><span>▶</span></span></button><div class="tech-info"><small>Técnica '+(j+1)+' de '+c.items.length+'</small><h5>'+esc(item.name)+'</h5><button class="watch" data-play="'+i+','+j+'">▶ Assistir ao golpe</button><a class="external" href="https://www.youtube.com/watch?v='+item.id+'" target="_blank" rel="noopener noreferrer">Abrir no YouTube ↗</a></div></article>').join('')+'</div>';
+return ['Bruno','Rafael'].map((athlete,a)=>{
+const entries=c.items.map((item,j)=>({item,j})).slice(a*c.base,(a+1)*c.base);
+return '<section class="athlete-section" aria-label="Golpes do '+athlete+'"><div class="athlete-heading"><h4>Golpes do '+athlete+'</h4><span>'+c.base+' '+(c.base===1?'vídeo':'vídeos')+'</span></div><div class="techniques">'+entries.map(({item,j},k)=>'<article class="technique"><button class="thumbnail" data-play="'+i+','+j+'" aria-label="Assistir '+esc(item.name)+' do '+athlete+'"><img loading="lazy" src="https://i.ytimg.com/vi/'+item.id+'/hqdefault.jpg" alt="Demonstração: '+esc(item.name)+'"><span class="play"><span>▶</span></span></button><div class="tech-info"><small>'+athlete+' • Técnica '+(k+1)+' de '+c.base+'</small><h5>'+esc(item.name)+'</h5><button class="watch" data-play="'+i+','+j+'">▶ Assistir ao golpe</button><a class="external" href="https://www.youtube.com/watch?v='+item.id+'" target="_blank" rel="noopener noreferrer">Abrir no YouTube ↗</a></div></article>').join('')+'</div></section>';
+}).join('');
 }
 function render(){
 const q=norm($('search').value);let total=0;
 $('list').innerHTML=categories.map((c,i)=>{if(q&&!norm(c.name+' '+c.items.map(x=>x.name).join(' ')).includes(q))return '';total++;
-return '<details data-group="'+i+'"><summary><span class="number">'+String(i+1).padStart(2,'0')+'</span><div class="summary-text"><h3>'+esc(i===0?'Quedas':c.name)+'</h3><p>Toque para ver os vídeos</p></div><span class="qty">'+c.items.length+' '+(i===25?'aulas':'técnicas diferentes')+'</span><span class="chevron">⌄</span></summary><div class="category-content"></div></details>';
+return '<details data-group="'+i+'"><summary><span class="number">'+String(i+1).padStart(2,'0')+'</span><div class="summary-text"><h3>'+esc(i===0?'Quedas':c.name)+'</h3><p>'+c.base+' do Bruno + '+c.base+' do Rafael</p></div><span class="qty">'+c.items.length+' '+(i===25?'aulas':'técnicas diferentes')+'</span><span class="chevron">⌄</span></summary><div class="category-content"></div></details>';
 }).join('');$('empty').hidden=total>0;
 document.querySelectorAll('[data-group]').forEach(d=>d.addEventListener('toggle',()=>{
 const content=d.querySelector('.category-content');if(!d.open){content.innerHTML='';return;}
@@ -19,8 +22,8 @@ content.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>{const [i,j]=b.
 }));
 }
 function openVideo(i,j){
-const item=categories[i].items[j];
-$('video-name').textContent=item.name;$('video-category').textContent=categories[i].name;$('video-source').textContent='Aula: '+item.title;$('support-note').textContent='';$('youtube').href='https://www.youtube.com/watch?v='+item.id;
+const item=categories[i].items[j],athlete=j<categories[i].base?'Bruno':'Rafael';
+$('video-name').textContent=item.name;$('video-category').textContent=athlete+' • '+categories[i].name;$('video-source').textContent='Aula: '+item.title;$('support-note').textContent='';$('youtube').href='https://www.youtube.com/watch?v='+item.id;
 $('embed').innerHTML='<iframe title="'+esc(item.name)+'" src="https://www.youtube-nocookie.com/embed/'+item.id+'?autoplay=1&rel=0" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';$('player').showModal();
 }
 $('search').addEventListener('input',render);$('featured').onclick=()=>openVideo(0,4);$('close').onclick=()=>$('player').close();$('player').addEventListener('close',()=>{$('embed').innerHTML=''});$('player').addEventListener('click',e=>{if(e.target===$('player')){const r=$('player').getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)$('player').close()}});render();
